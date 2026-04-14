@@ -25,4 +25,9 @@ public class TestDeploymentController {
         }
         return list.stream().toList().toString();
     }
+
+    @GetMapping("/rohit")
+    public String renderDeploymentTest(){
+        return "Your Backend Successfully Deployed on Render and Your all Services Alive Now";
+    }
 }
