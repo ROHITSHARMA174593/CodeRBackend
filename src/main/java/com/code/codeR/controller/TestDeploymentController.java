@@ -1,5 +1,6 @@
 package com.code.codeR.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,8 +33,9 @@ public class TestDeploymentController {
     }
 
     @GetMapping("/ping")
-    public String ping() {
-        return "Your Backend Server is Alive Now";
+    public ResponseEntity<String> ping() {
+        String res = "Your Backend Server is Alive Now";
+        return ResponseEntity.ok(res);
     }
 
 
