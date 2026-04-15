@@ -31,5 +31,10 @@ public class TestDeploymentController {
         return "Your Backend Successfully Deployed on Render and Your all Services Alive Now";
     }
 
+    @GetMapping("/ping")
+    public String ping() {
+        return "Your Backend Server is Alive Now";
+    }
+
 
 }
