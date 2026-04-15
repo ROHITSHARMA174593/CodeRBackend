@@ -33,7 +33,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                .requestMatchers("/", "/api/auth/**", "/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/rohit", "/api/rohit/**", "/ping").permitAll()
+                .requestMatchers("/", "/api/auth/**", "/h2-console/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/rohit", "/api/rohit/**", "/ping/**").permitAll()
                 .anyRequest().authenticated()
             )
 
