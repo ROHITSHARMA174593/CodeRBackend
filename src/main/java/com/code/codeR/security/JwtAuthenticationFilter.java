@@ -33,13 +33,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        String path = request.getServletPath();
-
-        // ✅ PUBLIC ENDPOINTS SKIP (IMPORTANT FIX)
-        if (path.startsWith("/ping") || path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);

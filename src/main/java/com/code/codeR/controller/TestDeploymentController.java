@@ -31,12 +31,12 @@ public class TestDeploymentController {
     public String renderDeploymentTest(){
         return "Your Backend Successfully Deployed on Render and Your all Services Alive Now";
     }
-
-    @GetMapping("/ping")
-    public ResponseEntity<String> ping() {
-        String res = "Your Backend Server is Alive Now";
-        return ResponseEntity.ok(res);
-    }
+//
+//    @GetMapping("/ping")
+//    public ResponseEntity<String> ping() {
+//        String res = "Your Backend Server is Alive Now";
+//        return ResponseEntity.ok(res);
+//    }
 
 
 }
