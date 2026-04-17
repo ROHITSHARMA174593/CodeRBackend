@@ -81,6 +81,9 @@ public class ProblemService {
         problem.setTopic(problemDetails.getTopic());
         problem.setType(problemDetails.getType());
         problem.setSubtype(problemDetails.getSubtype());
+
+        // Note: Test cases are usually updated via the dedicated TestcaseController / TestcaseService
+        // But we ensure the problem object remains consistent.
         
         return problemRepository.save(problem);
     }
