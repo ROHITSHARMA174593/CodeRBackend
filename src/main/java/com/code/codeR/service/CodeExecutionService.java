@@ -290,7 +290,7 @@ public class CodeExecutionService {
                             .message("Oops! Test Case Failed")
                             .input(input)
                             .output(result)
-                            .expectedOutput(isHidden ? "Hidden" : expected)
+                            .expectedOutput(expected) // Temporarily showing real expected for debugging
                             .totalTestCases(total)
                             .passedTestCases(alreadyPassed + passedCount)
                             .build());
