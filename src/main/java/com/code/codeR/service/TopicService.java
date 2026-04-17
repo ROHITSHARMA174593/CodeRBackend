@@ -30,4 +30,26 @@ public class TopicService {
         }
         return topicRepository.save(topic);
     }
+
+    @SuppressWarnings("null")
+    public Topic updateTopic(Long id, Topic topicDetails) {
+        Topic topic = topicRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        
+        topic.setName(topicDetails.getName());
+        topic.setDescription(topicDetails.getDescription());
+        
+        if (topicDetails.getCategory() != null && topicDetails.getCategory().getId() != null) {
+            SkillCategory category = categoryRepository.findById(topicDetails.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+            topic.setCategory(category);
+        }
+        
+        return topicRepository.save(topic);
+    }
+
+    @SuppressWarnings("null")
+    public void deleteTopic(Long id) {
+        topicRepository.deleteById(id);
+    }
 }

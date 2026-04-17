@@ -49,4 +49,26 @@ public class QuizController {
     public ResponseEntity<List<QuizQuestion>> getQuestionsByTopic(@PathVariable Long topicId) {
         return ResponseEntity.ok(quizService.getQuestionsByTopic(topicId));
     }
+
+    @PutMapping("/questions/{id}")
+    public ResponseEntity<QuizQuestion> updateQuestion(@PathVariable Long id, @RequestBody QuizQuestion question) {
+        return ResponseEntity.ok(quizService.updateQuestion(id, question));
+    }
+
+    @DeleteMapping("/questions/{id}")
+    public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
+        quizService.deleteQuestion(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/categories/{id}")
+    public ResponseEntity<SkillCategory> updateCategory(@PathVariable Long id, @RequestBody SkillCategory category) {
+        return ResponseEntity.ok(quizService.updateCategory(id, category));
+    }
+
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+        quizService.deleteCategory(id);
+        return ResponseEntity.ok().build();
+    }
 }

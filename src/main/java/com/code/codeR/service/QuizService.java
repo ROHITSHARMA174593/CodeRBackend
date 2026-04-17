@@ -38,6 +38,44 @@ public class QuizService {
         return questionRepository.save(question);
     }
 
+    @SuppressWarnings("null")
+    public SkillCategory updateCategory(Long id, SkillCategory details) {
+        SkillCategory cat = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+        cat.setName(details.getName());
+        cat.setDescription(details.getDescription());
+        return categoryRepository.save(cat);
+    }
+
+    @SuppressWarnings("null")
+    public void deleteCategory(Long id) {
+        categoryRepository.deleteById(id);
+    }
+
+    @SuppressWarnings("null")
+    public QuizQuestion updateQuestion(Long id, QuizQuestion details) {
+        QuizQuestion q = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Question not found"));
+        
+        q.setQuestion(details.getQuestion());
+        q.setOptionA(details.getOptionA());
+        q.setOptionB(details.getOptionB());
+        q.setOptionC(details.getOptionC());
+        q.setOptionD(details.getOptionD());
+        q.setCorrectAnswer(details.getCorrectAnswer());
+        q.setDifficulty(details.getDifficulty());
+        
+        if (details.getCategory() != null) q.setCategory(details.getCategory());
+        if (details.getTopic() != null) q.setTopic(details.getTopic());
+        
+        return questionRepository.save(q);
+    }
+
+    @SuppressWarnings("null")
+    public void deleteQuestion(Long id) {
+        questionRepository.deleteById(id);
+    }
+
     public List<QuizQuestion> getQuestionsByTopic(Long topicId) {
         return questionRepository.findByTopicId(topicId);
     }

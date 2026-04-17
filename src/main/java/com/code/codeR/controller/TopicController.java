@@ -25,4 +25,15 @@ public class TopicController {
     public ResponseEntity<Topic> createTopic(@RequestBody Topic topic) {
         return ResponseEntity.ok(topicService.createTopic(topic));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Topic> updateTopic(@PathVariable Long id, @RequestBody Topic topic) {
+        return ResponseEntity.ok(topicService.updateTopic(id, topic));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTopic(@PathVariable Long id) {
+        topicService.deleteTopic(id);
+        return ResponseEntity.ok().build();
+    }
 }
