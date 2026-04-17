@@ -13,6 +13,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Service
@@ -25,6 +28,8 @@ public class TestcaseService {
     // For now, I'll assume it exists or I'll implement logic via CodingProblem if possible,
     // but direct repository is better for delete/find operations on TestCases.
     private final com.code.codeR.repository.TestCaseRepository testCaseRepository; 
+    
+    private final String STORAGE_PATH = "Storage"; // Relative to the project root
 
     @SuppressWarnings("null")
     public TestCase addTestCase(Long problemId, MultipartFile inputFile, MultipartFile outputFile) throws IOException {
@@ -50,7 +55,20 @@ public class TestcaseService {
         testCase.setExpectedOutputContent(outputContent);
         testCase.setCodingProblem(problem);
         
+        // Save to local storage as backup
+        saveFileToDisk(inputFile, "input");
+        saveFileToDisk(outputFile, "output");
+        
         return testCaseRepository.save(testCase);
+    }
+
+    private void saveFileToDisk(MultipartFile file, String dirName) throws IOException {
+        Path directory = Paths.get(STORAGE_PATH, dirName);
+        if (!Files.exists(directory)) {
+            Files.createDirectories(directory);
+        }
+        Path filePath = directory.resolve(file.getOriginalFilename());
+        Files.write(filePath, file.getBytes());
     }
 
     private String extractFirstTwoLines(MultipartFile file) {
@@ -97,6 +115,10 @@ public class TestcaseService {
         testCase.setInputContent(inputContent);
         testCase.setExpectedOutputContent(outputContent);
         testCase.setCodingProblem(problem);
+
+        // Save to local storage as backup
+        saveFileToDisk(input, "input");
+        saveFileToDisk(output, "output");
 
         return testCaseRepository.save(testCase);
     }

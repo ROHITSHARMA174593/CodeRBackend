@@ -65,18 +65,20 @@ public class MainMethodGenerator {
                 argIndex++;
             }
             
-            if (returnType.equals("void")) {
-                sb.append("                solution.").append(methodName).append("(").append(methodCallArgs).append(");\n");
-            } else {
-                sb.append("                ").append(returnType).append(" result = solution.").append(methodName).append("(").append(methodCallArgs).append(");\n");
-                sb.append("                printResult(result);\n");
-            }
-            
-            sb.append("                System.out.println(\"---CASE_END---\");\n");
+                if (returnType.equals("void")) {
+                    sb.append("                solution.").append(methodName).append("(").append(methodCallArgs).append(");\n");
+                } else {
+                    sb.append("                ").append(returnType).append(" result = solution.").append(methodName).append("(").append(methodCallArgs).append(");\n");
+                    sb.append("                printResult(result);\n");
+                }
+                
+                sb.append("                System.out.println(\"---CASE_END---\");\n");
+                sb.append("                System.out.flush();\n");
 
-        } catch (JsonProcessingException e) {
-            sb.append("                System.out.println(\"Error parsing problem parameters: ").append(e.getMessage()).append("\");\n");
-        }
+            } catch (JsonProcessingException e) {
+                sb.append("                System.out.println(\"Error parsing problem parameters: ").append(e.getMessage()).append("\");\n");
+                sb.append("                System.out.flush();\n");
+            }
         
         sb.append("            } catch (Exception e) {\n");
         sb.append("                System.out.println(\"RUNTIME_ERROR: \" + e.getMessage());\n");

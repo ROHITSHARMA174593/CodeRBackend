@@ -129,9 +129,11 @@ public class CodeExecutionService {
 
             ProcessBuilder compilePB = new ProcessBuilder(javacPath, "Main.java", "Solution.java");
             compilePB.directory(directory);
+            compilePB.redirectErrorStream(true);
             Process compileProcess = compilePB.start();
-            if (!compileProcess.waitFor(10, TimeUnit.SECONDS) || compileProcess.exitValue() != 0) {
-                 String error = new String(compileProcess.getErrorStream().readAllBytes());
+            
+            if (!compileProcess.waitFor(15, TimeUnit.SECONDS) || compileProcess.exitValue() != 0) {
+                 String error = new String(compileProcess.getInputStream().readAllBytes());
                  emitter.accept(SubmissionResponse.builder().success(false).message("Compilation Failed").output(error.replace(tempDir, "")).build());
                  return;
             }
@@ -254,13 +256,17 @@ public class CodeExecutionService {
                     String input = inputs.get(passedCount).trim();
                     String expected = (passedCount < expecteds.size()) ? expecteds.get(passedCount).trim() : "";
                     
+                    // Robust comparison: whitespace-insensitive to handle differences in Arrays.toString() vs input files
+                    String normalizedResult = result.replaceAll("\\s+", "");
+                    String normalizedExpected = expected.replaceAll("\\s+", "");
+
                     if (result.startsWith("RUNTIME_ERROR:")) {
                         emitter.accept(SubmissionResponse.builder().success(false).message("Oops! Runtime Error").input(input).output(result.replace("RUNTIME_ERROR:", "").trim()).totalTestCases(total).passedTestCases(alreadyPassed + passedCount).build());
                         process.destroy();
                         return alreadyPassed + passedCount;
                     }
 
-                    if (!result.equals(expected)) {
+                    if (!normalizedResult.equals(normalizedExpected)) {
                         emitter.accept(SubmissionResponse.builder()
                             .success(false)
                             .message("Oops! Test Case Failed")
@@ -284,6 +290,14 @@ public class CodeExecutionService {
                     if (currentCase.length() > 0) currentCase.append("\n");
                     currentCase.append(line);
                 }
+            }
+        }
+        
+        // Capture any remaining error stream (crashes not caught by Main.java)
+        if (!process.isAlive() && process.exitValue() != 0) {
+            String error = new String(process.getErrorStream().readAllBytes());
+            if (!error.isEmpty()) {
+                 emitter.accept(SubmissionResponse.builder().success(false).message("Runtime Crash").output(error).totalTestCases(total).passedTestCases(alreadyPassed + passedCount).build());
             }
         }
 
