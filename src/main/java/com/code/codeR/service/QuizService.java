@@ -79,4 +79,8 @@ public class QuizService {
     public List<QuizQuestion> getQuestionsByTopic(Long topicId) {
         return questionRepository.findByTopicId(topicId);
     }
+
+    public List<QuizQuestion> getAllQuestions() {
+        return questionRepository.findAll();
+    }
 }

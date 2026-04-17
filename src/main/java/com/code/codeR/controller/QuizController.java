@@ -17,6 +17,11 @@ import java.util.List;
 public class QuizController {
 
     private final QuizService quizService;
+    
+    @GetMapping("/questions")
+    public ResponseEntity<List<QuizQuestion>> getAllQuestions() {
+        return ResponseEntity.ok(quizService.getAllQuestions());
+    }
 
     @GetMapping("/categories")
     public ResponseEntity<List<SkillCategory>> getAllCategories() {

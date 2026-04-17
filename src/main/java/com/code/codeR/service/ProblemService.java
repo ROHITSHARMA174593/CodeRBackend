@@ -29,7 +29,7 @@ public class ProblemService {
     private List<com.code.codeR.dto.ProblemDTO> mapToDTOs(List<CodingProblem> problems, String email) {
         java.util.Set<Long> solvedProblemIds = new java.util.HashSet<>();
         if (email != null) {
-            userRepository.findByEmail(email).ifPresent(user -> {
+            userRepository.findByEmailWithSolvedProblems(email).ifPresent(user -> {
                 user.getSolvedProblems().forEach(p -> solvedProblemIds.add(p.getId()));
             });
         }

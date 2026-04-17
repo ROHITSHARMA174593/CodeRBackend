@@ -290,7 +290,7 @@ public class CodeExecutionService {
                             .message("Oops! Test Case Failed")
                             .input(input)
                             .output(result)
-                            .expectedOutput(expected) // Temporarily showing real expected for debugging
+                            .expectedOutput(isHidden ? "Hidden" : expected)
                             .totalTestCases(total)
                             .passedTestCases(alreadyPassed + passedCount)
                             .build());
@@ -323,23 +323,32 @@ public class CodeExecutionService {
         return alreadyPassed + passedCount;
     }
 
-    private void updateUserProgress(String email, CodingProblem problem) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Update total solved count
-        UserProgress progress = userProgressRepository.findByUserEmail(email)
-                .orElseGet(() -> {
-                    UserProgress newProgress = new UserProgress(null, user, 0, 0);
-                    return userProgressRepository.save(newProgress);
-                });
-        
-        progress.setProblemsSolved(progress.getProblemsSolved() + 1);
-        userProgressRepository.save(progress);
-
-        // Record the specific problem as solved
-        user.getSolvedProblems().add(problem);
-        userRepository.save(user);
+    @org.springframework.transaction.annotation.Transactional
+    protected void updateUserProgress(String email, CodingProblem problem) {
+        try {
+            User user = userRepository.findByEmailWithSolvedProblems(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Update total solved count
+            UserProgress progress = userProgressRepository.findByUserEmail(email)
+                    .orElseGet(() -> {
+                        UserProgress newProgress = new UserProgress(null, user, 0, 0);
+                        return userProgressRepository.save(newProgress);
+                    });
+            
+            // Check if already solved to avoid double counting
+            if (!user.getSolvedProblems().contains(problem)) {
+                progress.setProblemsSolved(progress.getProblemsSolved() + 1);
+                userProgressRepository.save(progress);
+                
+                // Record the specific problem as solved
+                user.getSolvedProblems().add(problem);
+                userRepository.save(user);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to update user progress: " + e.getMessage());
+            // We don't throw here to avoid failing the whole execution flow
+        }
     }
 
     private void deleteDirectory(File directoryToBeDeleted) {
