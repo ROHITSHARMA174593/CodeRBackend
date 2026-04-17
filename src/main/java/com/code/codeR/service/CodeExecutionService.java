@@ -101,6 +101,20 @@ public class CodeExecutionService {
         String tempDir = System.getProperty("java.io.tmpdir") + File.separator + "codeR_" + UUID.randomUUID();
         File directory = new File(tempDir);
         
+        System.out.println("--- DIAGNOSTIC: Starting execution in " + tempDir);
+        System.out.println("--- DIAGNOSTIC: PATH=" + System.getenv("PATH"));
+        System.out.println("--- DIAGNOSTIC: JAVA_HOME=" + System.getenv("JAVA_HOME"));
+        
+        String javacPath = "javac";
+        // Try common locations if raw 'javac' fails or for robustness
+        String[] commonPaths = {"/usr/bin/javac", "/usr/local/bin/javac", "/opt/java/openjdk/bin/javac"};
+        for (String p : commonPaths) {
+            if (new File(p).exists()) {
+                javacPath = p;
+                System.out.println("--- DIAGNOSTIC: Found javac at " + p);
+                break;
+            }
+        }
         if (!directory.mkdirs()) {
              emitter.accept(SubmissionResponse.builder().success(false).message("Internal Error").build());
              return;
@@ -113,7 +127,7 @@ public class CodeExecutionService {
             Files.writeString(new File(directory, "Main.java").toPath(), mainCode);
             Files.writeString(new File(directory, "Solution.java").toPath(), solutionCode);
 
-            ProcessBuilder compilePB = new ProcessBuilder("javac", "Main.java", "Solution.java");
+            ProcessBuilder compilePB = new ProcessBuilder(javacPath, "Main.java", "Solution.java");
             compilePB.directory(directory);
             Process compileProcess = compilePB.start();
             if (!compileProcess.waitFor(10, TimeUnit.SECONDS) || compileProcess.exitValue() != 0) {
@@ -210,7 +224,11 @@ public class CodeExecutionService {
     }
 
     private int runAndStream(File directory, List<String> inputs, List<String> expecteds, int total, int alreadyPassed, java.util.function.Consumer<SubmissionResponse> emitter, boolean isHidden, String statusPrefix) throws IOException, InterruptedException {
-        ProcessBuilder pb = new ProcessBuilder("java", "-cp", ".", "Main");
+        String javaPath = "java";
+        if (new File("/opt/java/openjdk/bin/java").exists()) javaPath = "/opt/java/openjdk/bin/java";
+        else if (new File("/usr/bin/java").exists()) javaPath = "/usr/bin/java";
+
+        ProcessBuilder pb = new ProcessBuilder(javaPath, "-cp", ".", "Main");
         pb.directory(directory);
         Process process = pb.start();
 

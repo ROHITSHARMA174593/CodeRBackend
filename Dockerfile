@@ -8,6 +8,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:17-jdk
+RUN javac -version
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
