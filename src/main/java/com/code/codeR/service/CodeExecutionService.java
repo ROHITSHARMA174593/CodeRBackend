@@ -146,12 +146,14 @@ public class CodeExecutionService {
             if (!visibleOnly) {
                 for (TestCase tc : problem.getTestCases()) {
                     if (tc.getInputContent() != null) {
-                        try (BufferedReader reader = new BufferedReader(new StringReader(tc.getInputContent()))) {
-                            totalTestCases += (int) reader.lines().filter(s -> !s.trim().isEmpty()).count();
-                        }
+                    try (BufferedReader reader = new BufferedReader(new java.io.StringReader(tc.getInputContent()))) {
+                        totalTestCases += (int) reader.lines()
+                            .map(String::trim)
+                            .filter(s -> !s.trim().isEmpty()).count();
                     }
                 }
             }
+        }
             if (totalTestCases == 0) {
                 emitter.accept(SubmissionResponse.builder().success(false).message("No test cases defined for this problem.").build());
                 return;
@@ -168,10 +170,17 @@ public class CodeExecutionService {
             
             // Phase 1: Visible Test Cases
             List<String> visibleInputs = problem.getVisibleInput() != null ? 
-                java.util.Arrays.stream(problem.getVisibleInput().split("\\R")).filter(s -> !s.trim().isEmpty()).collect(Collectors.toList()) :
+                java.util.Arrays.stream(problem.getVisibleInput().split("\\R"))
+                    .map(String::trim)
+                    .filter(s -> !s.trim().isEmpty())
+                    .collect(java.util.stream.Collectors.toList()) :
                 java.util.Collections.emptyList();
+
             List<String> visibleExpecteds = problem.getVisibleOutput() != null ? 
-                java.util.Arrays.asList(problem.getVisibleOutput().split("\\R")) :
+                java.util.Arrays.stream(problem.getVisibleOutput().split("\\R"))
+                    .map(String::trim)
+                    .filter(s -> !s.trim().isEmpty())
+                    .collect(java.util.stream.Collectors.toList()) :
                 java.util.Collections.emptyList();
 
             if (!visibleInputs.isEmpty()) {
@@ -190,10 +199,10 @@ public class CodeExecutionService {
                     String inputContent = tc.getInputContent() != null ? tc.getInputContent() : "";
                     String outputContent = tc.getExpectedOutputContent() != null ? tc.getExpectedOutputContent() : "";
                     
-                    try (BufferedReader inR = new BufferedReader(new StringReader(inputContent));
-                         BufferedReader exR = new BufferedReader(new StringReader(outputContent))) {
-                        hInputs = inR.lines().filter(s -> !s.trim().isEmpty()).collect(Collectors.toList());
-                        hExpecteds = exR.lines().filter(s -> !s.trim().isEmpty()).collect(Collectors.toList());
+                    try (BufferedReader inR = new BufferedReader(new java.io.StringReader(inputContent));
+                         BufferedReader exR = new BufferedReader(new java.io.StringReader(outputContent))) {
+                        hInputs = inR.lines().map(String::trim).filter(s -> !s.trim().isEmpty()).collect(java.util.stream.Collectors.toList());
+                        hExpecteds = exR.lines().map(String::trim).filter(s -> !s.trim().isEmpty()).collect(java.util.stream.Collectors.toList());
                     }
                     
                     int currentPassed = runAndStream(directory, hInputs, hExpecteds, totalTestCases, passedTestCases, emitter, true, "Checking Hidden Test Cases");
@@ -232,6 +241,7 @@ public class CodeExecutionService {
 
         ProcessBuilder pb = new ProcessBuilder(javaPath, "-cp", ".", "Main");
         pb.directory(directory);
+        pb.redirectErrorStream(true); // MERGE stderr into stdout to capture all output/errors
         Process process = pb.start();
 
         // Write inputs in separate thread
@@ -256,12 +266,19 @@ public class CodeExecutionService {
                     String input = inputs.get(passedCount).trim();
                     String expected = (passedCount < expecteds.size()) ? expecteds.get(passedCount).trim() : "";
                     
-                    // Robust comparison: whitespace-insensitive to handle differences in Arrays.toString() vs input files
-                    String normalizedResult = result.replaceAll("\\s+", "");
-                    String normalizedExpected = expected.replaceAll("\\s+", "");
+                    // Ultra-Robust comparison: strip EVERYTHING except alphanumeric and brackets
+                    String normalizedResult = result.replaceAll("[^a-zA-Z0-9\\[\\],-]", "");
+                    String normalizedExpected = expected.replaceAll("[^a-zA-Z0-9\\[\\],-]", "");
 
                     if (result.startsWith("RUNTIME_ERROR:")) {
-                        emitter.accept(SubmissionResponse.builder().success(false).message("Oops! Runtime Error").input(input).output(result.replace("RUNTIME_ERROR:", "").trim()).totalTestCases(total).passedTestCases(alreadyPassed + passedCount).build());
+                        emitter.accept(SubmissionResponse.builder()
+                            .success(false)
+                            .message("Oops! Runtime Error")
+                            .input(input)
+                            .output(result.replace("RUNTIME_ERROR:", "").trim())
+                            .totalTestCases(total)
+                            .passedTestCases(alreadyPassed + passedCount)
+                            .build());
                         process.destroy();
                         return alreadyPassed + passedCount;
                     }
