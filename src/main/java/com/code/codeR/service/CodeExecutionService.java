@@ -26,7 +26,6 @@ public class CodeExecutionService {
     private final com.code.codeR.repository.UserProgressRepository userProgressRepository;
     private final CodeSecurityValidator securityValidator;
     private final MainMethodGenerator mainMethodGenerator;
-    private final FileStorageService fileStorageService;
 
     @Transactional(readOnly = true)
     public SubmissionResponse runVisibleTest(Long problemId, String userCode, String userEmail) {
@@ -130,12 +129,13 @@ public class CodeExecutionService {
             int totalTestCases = visibleCount;
             if (!visibleOnly) {
                 for (TestCase tc : problem.getTestCases()) {
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileStorageService.getFileInputStream(tc.getInput(), true)))) {
-                        totalTestCases += (int) reader.lines().filter(s -> !s.trim().isEmpty()).count();
+                    if (tc.getInputContent() != null) {
+                        try (BufferedReader reader = new BufferedReader(new StringReader(tc.getInputContent()))) {
+                            totalTestCases += (int) reader.lines().filter(s -> !s.trim().isEmpty()).count();
+                        }
                     }
                 }
             }
-
             if (totalTestCases == 0) {
                 emitter.accept(SubmissionResponse.builder().success(false).message("No test cases defined for this problem.").build());
                 return;
@@ -170,8 +170,12 @@ public class CodeExecutionService {
                 for (TestCase tc : problem.getTestCases()) {
                     List<String> hInputs;
                     List<String> hExpecteds;
-                    try (BufferedReader inR = new BufferedReader(new InputStreamReader(fileStorageService.getFileInputStream(tc.getInput(), true)));
-                         BufferedReader exR = new BufferedReader(new InputStreamReader(fileStorageService.getFileInputStream(tc.getExpectedOutput(), false)))) {
+                    
+                    String inputContent = tc.getInputContent() != null ? tc.getInputContent() : "";
+                    String outputContent = tc.getExpectedOutputContent() != null ? tc.getExpectedOutputContent() : "";
+                    
+                    try (BufferedReader inR = new BufferedReader(new StringReader(inputContent));
+                         BufferedReader exR = new BufferedReader(new StringReader(outputContent))) {
                         hInputs = inR.lines().filter(s -> !s.trim().isEmpty()).collect(Collectors.toList());
                         hExpecteds = exR.lines().filter(s -> !s.trim().isEmpty()).collect(Collectors.toList());
                     }

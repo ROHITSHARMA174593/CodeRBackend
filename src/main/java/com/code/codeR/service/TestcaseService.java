@@ -19,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TestcaseService {
 
-    private final FileStorageService fileStorageService;
     private final CodingProblemRepository codingProblemRepository;
     // Assuming you might need a TestCaseRepository if you want to manage them directly
     // If not present, I'll rely on cascading or create it.
@@ -32,8 +31,9 @@ public class TestcaseService {
         CodingProblem problem = codingProblemRepository.findById(problemId)
                 .orElseThrow(() -> new RuntimeException("Problem not found with id: " + problemId));
 
-        String inputKey = fileStorageService.saveInputFile(inputFile);
-        String outputKey = fileStorageService.saveOutputFile(outputFile);
+        // Read content as String instead of saving to disk
+        String inputContent = new String(inputFile.getBytes());
+        String outputContent = new String(outputFile.getBytes());
 
         // Automatically extract first 2 lines for visible test cases
         String visibleInput = extractFirstTwoLines(inputFile);
@@ -44,8 +44,10 @@ public class TestcaseService {
         codingProblemRepository.save(problem);
 
         TestCase testCase = new TestCase();
-        testCase.setInput(inputKey);  // Storing local file name
-        testCase.setExpectedOutput(outputKey); // Storing local file name
+        testCase.setInput(inputFile.getOriginalFilename());  // Store original name for reference
+        testCase.setExpectedOutput(outputFile.getOriginalFilename()); // Store original name for reference
+        testCase.setInputContent(inputContent);
+        testCase.setExpectedOutputContent(outputContent);
         testCase.setCodingProblem(problem);
         
         return testCaseRepository.save(testCase);
@@ -77,8 +79,9 @@ public class TestcaseService {
              throw new IllegalArgumentException("Input and Output files cannot be empty");
         }
 
-        String inputKey = fileStorageService.saveInputFile(input);
-        String outputKey = fileStorageService.saveOutputFile(output);
+        // Read content as String instead of saving to disk
+        String inputContent = new String(input.getBytes());
+        String outputContent = new String(output.getBytes());
 
         // Automatically extract first 2 lines for visible test cases
         String visibleInput = extractFirstTwoLines(input);
@@ -89,8 +92,10 @@ public class TestcaseService {
         codingProblemRepository.save(problem);
 
         TestCase testCase = new TestCase();
-        testCase.setInput(inputKey); 
-        testCase.setExpectedOutput(outputKey);
+        testCase.setInput(input.getOriginalFilename()); 
+        testCase.setExpectedOutput(output.getOriginalFilename());
+        testCase.setInputContent(inputContent);
+        testCase.setExpectedOutputContent(outputContent);
         testCase.setCodingProblem(problem);
 
         return testCaseRepository.save(testCase);
@@ -110,46 +115,19 @@ public class TestcaseService {
         TestCase testCase = testCaseRepository.findById(testCaseId)
                 .orElseThrow(() -> new RuntimeException("Testcase not found"));
         
-        String key = isInput ? testCase.getInput() : testCase.getExpectedOutput();
-        try {
-            return fileStorageService.getFileInputStream(key, isInput);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read file: " + key, e);
-        }
+        String content = isInput ? testCase.getInputContent() : testCase.getExpectedOutputContent();
+        if (content == null) content = "";
+        return new java.io.ByteArrayInputStream(content.getBytes());
     }
 
     @Transactional
     @SuppressWarnings("null")
     public void deleteTestCase(Long testCaseId) {
-        TestCase testCase = testCaseRepository.findById(testCaseId)
-                .orElseThrow(() -> new RuntimeException("Testcase not found"));
-
-        // Delete files from Local Storage
-        try {
-            if (testCase.getInput() != null) fileStorageService.deleteInputFile(testCase.getInput());
-            if (testCase.getExpectedOutput() != null) fileStorageService.deleteOutputFile(testCase.getExpectedOutput());
-        } catch (Exception e) {
-            System.err.println("Failed to delete local files: " + e.getMessage());
-        }
-
-        testCaseRepository.delete(testCase);
+        testCaseRepository.deleteById(testCaseId);
     }
 
     @Transactional
-    // @SuppressWarnings("null")
     public void deleteAllTestCases(Long problemId) {
-        // Fetch all test cases in one go for file deletion
-        List<TestCase> testCases = testCaseRepository.findByCodingProblemId(problemId);
-        
-        for (TestCase tc : testCases) {
-            try {
-                if (tc.getInput() != null) fileStorageService.deleteInputFile(tc.getInput());
-                if (tc.getExpectedOutput() != null) fileStorageService.deleteOutputFile(tc.getExpectedOutput());
-            } catch (Exception e) {
-                System.err.println("Failed to delete local files for testcase " + tc.getId() + ": " + e.getMessage());
-            }
-        }
-        
         // Batch delete from DB in one hit
         testCaseRepository.deleteByCodingProblemId(problemId);
     }

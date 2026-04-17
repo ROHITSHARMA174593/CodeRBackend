@@ -24,6 +24,12 @@ public class TestCase {
     @Column(nullable = false)
     private boolean isHidden = true; // Default to true as these are S3 keys now (hidden)
 
+    @Column(columnDefinition = "TEXT")
+    private String inputContent;
+
+    @Column(columnDefinition = "TEXT")
+    private String expectedOutputContent;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coding_problem_id")
     @JsonIgnore
