@@ -52,6 +52,18 @@ public class MainMethodGenerator {
                     sb.append("parseString(parts[").append(argIndex).append("].trim());\n");
                 } else if (type.equals("int[]")) {
                     sb.append("parseIntArray(parts[").append(argIndex).append("].trim());\n");
+                } else if (type.equals("double")) {
+                    sb.append("Double.parseDouble(parts[").append(argIndex).append("].trim());\n");
+                } else if (type.equals("long")) {
+                    sb.append("Long.parseLong(parts[").append(argIndex).append("].trim());\n");
+                } else if (type.equals("double[]")) {
+                    sb.append("parseDoubleArray(parts[").append(argIndex).append("].trim());\n");
+                } else if (type.equals("String[]")) {
+                    sb.append("parseStringArray(parts[").append(argIndex).append("].trim());\n");
+                } else if (type.equals("char")) {
+                    sb.append("parts[").append(argIndex).append("].trim().replaceAll(\"^\\\"|\\\"$\", \"\").charAt(0);\n");
+                } else if (type.equals("char[]")) {
+                    sb.append("parseCharArray(parts[").append(argIndex).append("].trim());\n");
                 } else if (type.equals("boolean")) {
                     sb.append("Boolean.parseBoolean(parts[").append(argIndex).append("].trim());\n");
                 } else if (type.equals("ListNode")) {
@@ -148,6 +160,20 @@ public class MainMethodGenerator {
         sb.append("        return res;\n");
         sb.append("    }\n\n");
 
+        sb.append("    private static double[] parseDoubleArray(String input) {\n");
+        sb.append("        if (input == null || input.trim().isEmpty() || input.trim().equals(\"[]\")) return new double[0];\n");
+        sb.append("        input = input.trim();\n");
+        sb.append("        if (input.startsWith(\"[\") && input.endsWith(\"]\")) input = input.substring(1, input.length() - 1);\n");
+        sb.append("        String[] parts = input.split(\"[,\\\\s]+\");\n");
+        sb.append("        List<Double> list = new ArrayList<>();\n");
+        sb.append("        for (String p : parts) if (!p.trim().isEmpty()) list.add(Double.parseDouble(p.trim()));\n");
+        sb.append("        double[] res = new double[list.size()];\n");
+        sb.append("        for(int i=0; i<list.size(); i++) res[i] = list.get(i);\n");
+        sb.append("        return res;\n");
+        sb.append("    }\n\n");
+
+        sb.append("    private static String[] parseStringArray(String input) {\n        if (input == null || input.trim().isEmpty() || input.trim().equals(\"[]\")) return new String[0];\n        input = input.trim();\n        if (input.startsWith(\"[\") && input.endsWith(\"]\")) input = input.substring(1, input.length() - 1);\n        String[] parts = input.split(\"[,\\\\s]+\");\n        List<String> list = new ArrayList<>();\n        for (String p : parts) if (!p.trim().isEmpty()) list.add(p.trim().replaceAll(\"^\\\"|\\\"$\", \"\"));\n        return list.toArray(new String[0]);\n    }\n\n    private static char[] parseCharArray(String input) {\n        if (input == null || input.trim().isEmpty() || input.trim().equals(\"[]\")) return new char[0];\n        input = input.trim();\n        if (input.startsWith(\"[\") && input.endsWith(\"]\")) input = input.substring(1, input.length() - 1);\n        String[] parts = input.split(\"[,\\\\s]+\");\n        StringBuilder sb = new StringBuilder();\n        for (String p : parts) {\n            String s = p.trim().replaceAll(\"^\\\"|\\\"$\", \"\");\n            if (!s.isEmpty()) sb.append(s.charAt(0));\n        }\n        return sb.toString().toCharArray();\n    }\n\n");
+
         // parseString helper
         sb.append("    private static String parseString(String input) {\n");
         sb.append("        if (input == null) return \"\";\n");
@@ -164,6 +190,12 @@ public class MainMethodGenerator {
         sb.append("            System.out.println(\"null\");\n");
         sb.append("        } else if (result instanceof int[]) {\n");
         sb.append("            System.out.println(Arrays.toString((int[]) result));\n");
+        sb.append("        } else if (result instanceof double[]) {\n");
+        sb.append("            System.out.println(Arrays.toString((double[]) result));\n");
+        sb.append("        } else if (result instanceof Object[]) {\n");
+        sb.append("            System.out.println(Arrays.deepToString((Object[]) result));\n");
+        sb.append("        } else if (result instanceof List) {\n");
+        sb.append("            System.out.println(result.toString());\n");
         sb.append("        } else if (result.getClass().getSimpleName().equals(\"ListNode\")) {\n");
         sb.append("            System.out.println(serializeLinkedList((ListNode) result));\n");
         sb.append("        } else {\n");
