@@ -266,9 +266,10 @@ public class CodeExecutionService {
                     String input = inputs.get(passedCount).trim();
                     String expected = (passedCount < expecteds.size()) ? expecteds.get(passedCount).trim() : "";
                     
-                    // Ultra-Robust comparison: strip EVERYTHING except alphanumeric and brackets
-                    String normalizedResult = result.replaceAll("[^a-zA-Z0-9\\[\\],-]", "");
-                    String normalizedExpected = expected.replaceAll("[^a-zA-Z0-9\\[\\],-]", "");
+                    // Super-Robust comparison: strip EVERYTHING except alphanumeric and signs
+                    // This handles [1, 2] vs 1 2 vs 1, 2 vs [1,2] perfectly.
+                    String normalizedResult = result.replaceAll("[^a-zA-Z0-9-]", "");
+                    String normalizedExpected = expected.replaceAll("[^a-zA-Z0-9-]", "");
 
                     if (result.startsWith("RUNTIME_ERROR:")) {
                         emitter.accept(SubmissionResponse.builder()
